@@ -86,8 +86,8 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	data["reservation"] = res
 
 	render.Template(w, r, "make-reservation.page.tmpl", &models.TemplateData{
-		Form: forms.New(nil),
-		Data: data,
+		Form:      forms.New(nil),
+		Data:      data,
 		StringMap: stringMap,
 	})
 }
@@ -216,8 +216,11 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 }
 
 type jsonResponse struct {
-	OK      bool   `json:"ok"`
-	Message string `json:"message"`
+	OK        bool   `json:"ok"`
+	Message   string `json:"message"`
+	RoomID    string `json:"room_id"`
+	StartDate string `json:"start_date"`
+	EndDate   string `json:"end_date"`
 }
 
 // AvailabilityJSON handles request for availability and send JSON response
@@ -255,6 +258,9 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	resp := jsonResponse{
 		OK:      available,
 		Message: "",
+		StartDate: sd,
+		EndDate: ed,
+		RoomID: strconv.Itoa(roomID),
 	}
 
 	out, err := json.MarshalIndent(resp, "", "     ")
@@ -289,7 +295,7 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 	stringMap["end_date"] = ed
 
 	render.Template(w, r, "reservation-summary.page.tmpl", &models.TemplateData{
-		Data: data,
+		Data:      data,
 		StringMap: stringMap,
 	})
 }
