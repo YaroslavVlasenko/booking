@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/yaroslavvlasenko/bookings/internal/config"
 	"github.com/yaroslavvlasenko/bookings/internal/driver"
 	"github.com/yaroslavvlasenko/bookings/internal/forms"
@@ -168,9 +167,49 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 
 // PostAvailability renders the search-availability page
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
-	start := r.Form.Get("start")
-	end := r.Form.Get("end")
-	w.Write([]byte(fmt.Sprintf("start date is %s and end date is %s", start, end)))
+	s := r.Form.Get("start")
+	e := r.Form.Get("end")
+
+	//2020-01-01 -- 01/02 03:04:05PM '06 -007
+
+	layout := "2006-01-02"
+	start, err := time.Parse(layout, s)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	end, err := time.Parse(layout, e)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	rooms, err := m.DB.SearchAvailabilityForAllRooms(start, end)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	if len(rooms) == 0 {
+		//no availability
+		m.App.Session.Put(r.Context(), "error", "No availability")
+		http.Redirect(w, r, "/search-availability", http.StatusSeeOther)
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["rooms"] = rooms
+
+	res := models.Reservation{
+		StartDate: start,
+		EndDate:   end,
+	}
+
+	m.App.Session.Put(r.Context(), "reservation", res)
+
+	render.Template(w, r, "choose-room.page.tmpl", &models.TemplateData{
+		Data: data,
+	})
 }
 
 type jsonResponse struct {
