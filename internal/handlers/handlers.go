@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/yaroslavvlasenko/bookings/internal/config"
@@ -104,15 +103,17 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation handles the posting of reservation form
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
-	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	err := r.ParseForm()
-	if !ok {
-		helpers.ServerError(w, errors.New("cannot get from session"))
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "can not parse form!")
+		http.Redirect(w,r,"/", http.StatusTemporaryRedirect)
 		return
 	}
 
-	if err != nil {
-		helpers.ServerError(w, err)
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		m.App.Session.Put(r.Context(), "error", "can not get data form session")
+		http.Redirect(w,r,"/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -130,7 +131,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
-
+		http.Error(w, "my own error message", http.StatusSeeOther)
 		render.Template(w, r, "make-reservation.page.tmpl", &models.TemplateData{
 			Form: form,
 			Data: data,
@@ -140,7 +141,8 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	newReservationID, err := m.DB.InsertReservation(reservation)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can not insert reservation into database")
+		http.Redirect(w,r,"/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -154,7 +156,8 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	err = m.DB.InsertRoomRestriction(restriction)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "can not insert room restriction!")
+		http.Redirect(w,r,"/", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -332,7 +335,7 @@ func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// BookRoom takes URL parameters, builds a sessional variable, and takes user to make res screen
+// BookRoom takes URL parameters, builds a session variable, and takes user to make res screen
 func (m *Repository) BookRoom(w http.ResponseWriter, r *http.Request) {
 	roomID, _ := strconv.Atoi(r.URL.Query().Get("id"))
 	sd := r.URL.Query().Get("s")
