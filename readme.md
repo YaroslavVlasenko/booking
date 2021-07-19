@@ -27,3 +27,11 @@ soda generate sql *SeedNameTable*
   
 - Run test in folder with coverage
 *go test -coverprofile=coverage.out && go tool cover -html=coverage.out*
+  
+
+Soda installation:
+  ```
+  $ go get github.com/gobuffalo/pop/...
+  $ go install github.com/gobuffalo/pop/soda
+  ```
+  See also [full guide](https://gobuffalo.io/en/docs/db/toolbox/#from-source)
