@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/yaroslavvlasenko/bookings/internal/config"
@@ -13,28 +14,61 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
-
-const portNumber = ":8080"
 
 var app config.AppConfig
 var session *scs.SessionManager
 var infoLog *log.Logger
 var errorLog *log.Logger
 
+var dbConnection struct {
+	Host     string
+	Port     int
+	DataBase string
+	User     string
+	Password string
+}
+
+var httpdConfig struct {
+	Port int
+}
+
 // main is the entrypoint of application
 func main() {
+	/* Init database configuration */
+	dbConfigFile, err := os.Open("config/db.json")
+	if err != nil {
+		fmt.Println("opening config file", err.Error())
+	}
+
+	dbJsonParser := json.NewDecoder(dbConfigFile)
+	if err = dbJsonParser.Decode(&dbConnection); err != nil {
+		fmt.Println("parsing config file", err.Error())
+	}
+
+	/* Init web server configuration */
+	httpdConfigFile, err := os.Open("config/httpd.json")
+	if err != nil {
+		fmt.Println("opening config file", err.Error())
+	}
+
+	httpdJsonParser := json.NewDecoder(httpdConfigFile)
+	if err = httpdJsonParser.Decode(&httpdConfig); err != nil {
+		fmt.Println("parsing config file", err.Error())
+	}
+
 	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.SQL.Close()
 
-	fmt.Println(fmt.Sprintf("Starting application on port %s", portNumber))
+	fmt.Println(fmt.Sprintf("Starting application on port %s", httpdConfig.Port))
 
 	srv := &http.Server{
-		Addr:    portNumber,
+		Addr:    ":" + strconv.Itoa(httpdConfig.Port),
 		Handler: routes(&app),
 	}
 
@@ -68,7 +102,10 @@ func run() (*driver.DB, error) {
 	app.Session = session
 
 	//connect to database
-	db, err := driver.ConnectSql("host=localhost port=5432 dbname=bookings user=postgres password=root")
+	db, err := driver.ConnectSql("host=localhost port=" + strconv.Itoa(dbConnection.Port) +
+		" dbname=" + dbConnection.DataBase +
+		" user=" + dbConnection.User +
+		" password=" + dbConnection.Password)
 	if err != nil {
 		log.Fatal("cannot connect to database! Dying...")
 		return nil, err

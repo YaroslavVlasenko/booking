@@ -4,3 +4,5 @@ coverage.out
 *code-workspace
 database.yml
 bookings
+config/db.json
+config/httpd.json
