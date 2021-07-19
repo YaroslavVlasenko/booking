@@ -17,3 +17,10 @@ soda generate fizz *CreateFKNameTable*
 
 - Seed generation:
 soda generate sql *SeedNameTable*
+  
+- Run the project:
+*./run.bat(Windows)*
+*./run.sh(Linux)*
+  
+- Run all the tests
+*go test -v ./...*
