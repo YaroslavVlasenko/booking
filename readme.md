@@ -9,7 +9,7 @@ This is repository for my bookings and reservations project.
 
 To remember:
 
-- Migration generation table:
+- Migration generate table:
 soda generate fizz *CreateNameTable*
 
 - Migration generate FK/Index:
@@ -24,3 +24,6 @@ soda generate sql *SeedNameTable*
   
 - Run all the tests
 *go test -v ./...*
+  
+- Run test in folder with coverage
+*go test -coverprofile=coverage.out && go tool cover -html=coverage.out*
