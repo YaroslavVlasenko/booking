@@ -163,6 +163,33 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 
+	// send notifications - first to guest
+	htmlMsg := fmt.Sprintf(`
+	<strong>Reservation Confirmation</strong><br>
+	Dear %s.<br>
+	This is confirm your reservation from %s to %s
+	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+	msg := models.MailData{
+		To:      reservation.Email,
+		From:    "me@here.com",
+		Subject: "Reservation Conformation",
+		Content: htmlMsg,
+	}
+	m.App.MailChan <- msg
+
+	// send notifications - first to guest
+	htmlMsg = fmt.Sprintf(`
+	<strong>Reservation Confirmation</strong><br>
+	A reservation has been made for %s from %s to %s.
+	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
+	msg = models.MailData{
+		To:      "me@here.com",
+		From:    "me@here.com",
+		Subject: "Reservation Notification",
+		Content: htmlMsg,
+	}
+	m.App.MailChan <- msg
+
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
 }
 
@@ -238,6 +265,20 @@ type jsonResponse struct {
 
 // AvailabilityJSON handles request for availability and send JSON response
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	// need to parse request body
+	err := r.ParseForm()
+	if err != nil {
+		// can't parse form, so return appropriate json
+		resp := jsonResponse{
+			OK: false,
+			Message: "Internal server error",
+		}
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
 
@@ -262,9 +303,14 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	available, err := m.DB.SearchAvailabilityByDatesByRoomId(startDate, endDate, roomID)
 	if err != nil {
-		fmt.Println("Data: ", startDate, endDate, roomID)
-		fmt.Println("Error: ", err)
-		helpers.ServerError(w, err)
+		// can't parse form, so return appropriate json
+		resp := jsonResponse{
+			OK: false,
+			Message: "Error connected to database",
+		}
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
 		return
 	}
 
