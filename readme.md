@@ -15,9 +15,36 @@ To remember:
 ####Migration generate table: soda generate fizz CreateNameTable
 ####Migration generate FK/Index: soda generate fizz CreateFKNameTable
 ####Seed generation: soda generate sql SeedNameTable
-#
+
 ####Run the project on Windows: ./run.bat
 ####Run the project on Linux: ./run.sh
-#
+
 ####Run all the tests: go test -v ./...
 ####Run test in folder with coverage: go test -coverprofile=coverage.out && go tool cover -html=coverage.out
+
+- Migration generate table:
+soda generate fizz *CreateNameTable*
+
+- Migration generate FK/Index:
+soda generate fizz *CreateFKNameTable*
+
+- Seed generation:
+soda generate sql *SeedNameTable*
+  
+- Run the project:
+*./run.bat(Windows)*
+*./run.sh(Linux)*
+  
+- Run all the tests
+*go test -v ./...*
+  
+- Run test in folder with coverage
+*go test -coverprofile=coverage.out && go tool cover -html=coverage.out*
+  
+
+Soda installation:
+  ```
+  $ go get github.com/gobuffalo/pop/...
+  $ go install github.com/gobuffalo/pop/soda
+  ```
+  See also [full guide](https://gobuffalo.io/en/docs/db/toolbox/#from-source)

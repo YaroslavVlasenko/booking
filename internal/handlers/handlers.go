@@ -171,9 +171,10 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
 	msg := models.MailData{
 		To:      reservation.Email,
-		From:    "me@here.com",
+		From:    "gerold@here.com",
 		Subject: "Reservation Conformation",
 		Content: htmlMsg,
+		Template: "basic.html",
 	}
 	m.App.MailChan <- msg
 
@@ -183,8 +184,8 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	A reservation has been made for %s from %s to %s.
 	`, reservation.FirstName, reservation.StartDate.Format("2006-01-02"), reservation.EndDate.Format("2006-01-02"))
 	msg = models.MailData{
-		To:      "me@here.com",
-		From:    "me@here.com",
+		To:      "gerold@here.com",
+		From:    "gerold@here.com",
 		Subject: "Reservation Notification",
 		Content: htmlMsg,
 	}

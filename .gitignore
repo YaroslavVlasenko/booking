@@ -3,3 +3,6 @@ coverage.out
 .DS_Store
 *code-workspace
 database.yml
+bookings
+config/db.json
+config/httpd.json
